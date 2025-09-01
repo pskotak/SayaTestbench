@@ -4,3 +4,6 @@
 [submodule "LocalMap"]
 	path = LocalMap
 	url = git@github.com:pskotak/LocalMap.git
+[submodule "SayaGlobals"]
+	path = SayaGlobals
+	url = git@github.com:pskotak/SayaGlobals.git

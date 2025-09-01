@@ -22,7 +22,22 @@ include_directories( ${OpenCV_INCLUDE_DIRS} )
 #add_subdirectory(vision)
 
 set(SOURCE_FILES
+    SayaGlobals/globals.cpp
     vision/vision.cpp
+    LocalMap/grid_map/src/GridMap.cpp
+    LocalMap/grid_map/src/GridMapMath.cpp
+    LocalMap/grid_map/src/SubmapGeometry.cpp
+    LocalMap/grid_map/src/BufferRegion.cpp
+    LocalMap/grid_map/src/Polygon.cpp
+    LocalMap/grid_map/src/CubicInterpolation.cpp
+    LocalMap/grid_map/src/iterators/GridMapIterator.cpp
+    LocalMap/grid_map/src/iterators/SubmapIterator.cpp
+    LocalMap/grid_map/src/iterators/CircleIterator.cpp
+    LocalMap/grid_map/src/iterators/EllipseIterator.cpp
+    LocalMap/grid_map/src/iterators/SpiralIterator.cpp
+    LocalMap/grid_map/src/iterators/PolygonIterator.cpp
+    LocalMap/grid_map/src/iterators/LineIterator.cpp
+    LocalMap/locmap.cpp
     main.cpp
 )
 
