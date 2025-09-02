@@ -13,14 +13,14 @@
 int main(int argc, char **argv) {
     bool QuitProgram = false;
     cv::Mat processed_frame;
-    std::vector<vision::T3Dpoint> pc;
-    vision::T3Dpoint pt;
+    std::vector<T3Dpoint> pc;
+    T3Dpoint pt;
     cv::Mat ptshow(matlenpx,matlenpx,CV_8UC3,cv::Scalar(0,127,127));
     int u,v;
     cv::Vec3b px;
     
-    std::vector<vision::TScanPoint> sc;
-    vision::TScanPoint sp;
+    std::vector<TScanPoint> sc;
+    TScanPoint sp;
     
     bool ShowPoints = true;
     
