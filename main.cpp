@@ -4,6 +4,7 @@
 
 #include "vision/vision.h"
 #include "LocalMap/locmap.h"
+#include "t265.h"
 
 //#define DispVision
 
@@ -34,6 +35,9 @@ int main(int argc, char **argv) {
     cv::Mat show_grid(GridCells,GridCells,CV_8UC3,cv::Scalar(127,127,127));
     cv::Mat up_grid;
     
+    std::thread T265Thread;
+    std::unique_lock<std::mutex> mainT265_lock(T265_mutex, std::defer_lock);
+    
 // ----------------------------------------------------------------------------    
     std::cout << "Saya the robot Test bench" << std::endl;
     //vision::GetSerNo();
@@ -47,6 +51,9 @@ int main(int argc, char **argv) {
     
     locmap::ObstacleDelta = 0.15;
     LocMapThread = std::thread(&locmap::RunLocMap);
+    
+    t265::t265_serial_number = vision::t265_serial_number; // vision::GetSerNo(); aktualizuje i T265 serial number
+    T265Thread = std::thread(&t265::RunT265);
     
     while (!QuitProgram) {
         vision::Frame();
@@ -66,6 +73,23 @@ int main(int argc, char **argv) {
             //std::cout << vision::ScPoints.size() << std::endl;
             sc = vision::ScPoints;
 #endif
+            if (mainT265_lock.try_lock()) {
+//                 Yaw = rs_yaw;
+//                 YawRad = rs_yaw_rad;
+//                 Pitch = rs_pitch;
+//                 Roll = rs_roll;
+//                 Velocity = rs_velocity;
+//                 AngularVelocity = rs_angular_velo;
+//                 PosX = rs_x;
+//                 PosY = rs_y;
+//                 PosZ = rs_z;
+                
+                BotPos = t265::rs_BotPos;
+                BotOrientation = t265::rs_BotOrientation;
+
+                mainT265_lock.unlock();
+            }
+            
             if (!locmap::UpdateGridMap) {
                 show_grid.setTo(cv::Scalar(127,127,127));
                 for (int y = 0; y < GridCells; ++y) {
@@ -157,6 +181,10 @@ int main(int argc, char **argv) {
         
         usleep(100000);
     }
+    
+    std::cout << "down T265" << std::endl;
+    t265::ShutdownT265 = true;
+    T265Thread.join();
     
     std::cout << "down LocalMap" << std::endl;
     locmap::ShutdownLocMap = true;
