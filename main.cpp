@@ -7,6 +7,7 @@
 #include "t265.h"
 
 //#define DispVision
+#define PlanIt
 
 #define maxdist 4.0f
 #define distpixel 0.006f
@@ -89,8 +90,13 @@ int main(int argc, char **argv) {
 
                 mainT265_lock.unlock();
             }
-            
+
             if (!locmap::UpdateGridMap) {
+#ifdef PlanIt
+                locmap::SetGoal(0,GridCenter);
+                //locmap::SetGoal(0,GridCells-1);
+                locmap::Plan(); // TODO Force A* planner to plan to the nearest wall even if goal is unreachable
+#endif
                 show_grid.setTo(cv::Scalar(127,127,127));
                 for (int y = 0; y < GridCells; ++y) {
                     for (int x = 0; x < GridCells; ++x) {
@@ -179,7 +185,8 @@ int main(int argc, char **argv) {
             vision::EndPcRow++;
         }
         
-        usleep(100000);
+        //usleep(100000);
+        usleep(10000);
     }
     
     std::cout << "down T265" << std::endl;
