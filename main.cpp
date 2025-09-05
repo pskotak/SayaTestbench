@@ -51,6 +51,7 @@ int main(int argc, char **argv) {
     std::cout << "Vision running." << std::endl;
     
     locmap::ObstacleDelta = 0.15;
+    locmap::InflateRadius = 3;
     LocMapThread = std::thread(&locmap::RunLocMap);
     
     t265::t265_serial_number = vision::t265_serial_number; // vision::GetSerNo(); aktualizuje i T265 serial number
@@ -93,8 +94,8 @@ int main(int argc, char **argv) {
 
             if (!locmap::UpdateGridMap) {
 #ifdef PlanIt
-                locmap::SetGoal(0,GridCenter);
-                //locmap::SetGoal(0,GridCells-1);
+                //locmap::SetGoal(0,GridCenter);
+                locmap::SetGoal(0,GridCells-1);
                 locmap::Plan(); // TODO Force A* planner to plan to the nearest wall even if goal is unreachable
 #endif
                 show_grid.setTo(cv::Scalar(127,127,127));
