@@ -30,10 +30,10 @@ Dependencies=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00
 Dependency Action=Build
 EnvironmentGroup=
 Executable=file:///home/owner/Develop/SayaTestbench
-External Terminal=konsole --noclose --workdir %workdir -e %exe
+External Terminal=xfce4-terminal --hold --command %exe
 Kill Before Executing Again=4194304
 Project Target=SayaTestbench,sayatestbench
-Use External Terminal=false
+Use External Terminal=true
 Working Directory=
 isExecutable=false
 
