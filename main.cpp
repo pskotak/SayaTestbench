@@ -43,6 +43,16 @@ int main(int argc, char **argv) {
     float yaw_rad,R;
     std::vector<float> ranges;
 
+#define VFHheight 150
+    #define VFHline 3
+    //cv::Mat dispVFH(Sectors,VFHheight,CV_8UC3,cv::Scalar(127,127,127));
+    cv::Mat dispVFH(VFHheight,3*Sectors,CV_8UC3,cv::Scalar(127,127,127));
+    //float ScaleVFH = ((float) VFHheight) / std::exp(GridSizeM / 2.0);
+    float Hmax = (GridSizeM / 2.0);
+    //float ScaleVFH = ((float) VFHheight) / (Hmax * Hmax * Hmax);
+    float ScaleVFH = ((float) VFHheight) / (Hmax);
+    int H;
+
 // ----------------------------------------------------------------------------
     std::cout << "Saya the robot Test bench" << std::endl;
     //vision::GetSerNo();
@@ -139,65 +149,51 @@ int main(int argc, char **argv) {
                 BresenhamLim2(GridCenter,GridCenter,X,Y,0,GridCells-1,pts);
 
                 for (int i=0; i< pts.size(); i++) {
-                    //show_grid.at<cv::Vec3b>(pts[i].y,pts[i].x) = {0,255,255};
-                    show_grid.at<cv::Vec3b>(pts[i].y,pts[i].x) = {200,200,200};
-//                     X = round(pts[i].x); Y = GridCells-1-round(pts[i].y);
-//                     if (locmap::ObstacleGrid[X][Y].obstacle) {
-//                         break;
-//                     }
+                    show_grid.at<cv::Vec3b>(pts[i].y,pts[i].x) = {0,255,255};
                 }
-
-//                 if (locmap::BresenhamLimObstacle(GridCenter,GridCenter,X,Y,0,GridCells-1,P)) {
-//                     show_grid.at<cv::Vec3b>(P.y,P.x) = {0,0,255};
-//                 }
-                //
-
-                //sprintf(PrnBuf,"%.3f",yaw_rad);
-                //cv::putText(show_grid,PrnBuf,cv::Point(10, show_grid.rows / 2),cv::FONT_HERSHEY_DUPLEX,0.3,CV_RGB(118, 185, 0),1);
-
-//                 show_grid.at<cv::Vec3b>(0,0) = {0,0,255}; // x = 0; y = 0;
-//                 show_grid.at<cv::Vec3b>(0,100) = {0,255,0}; // x = 100; y = 0;
-//                 show_grid.at<cv::Vec3b>(100,100) = {255,128,0}; // x = 100; y = 100;
-//                 show_grid.at<cv::Vec3b>(100,0) = {0,255,255}; // x = 0; y = 100;
-
                 show_grid.at<cv::Vec3b>(GridCenter,GridCenter) = {255,0,0};
 
-                pts.clear();
-                for (int i=50; i >= 0; i--) {
-                    P.x = i; P.y = 100;
-                    pts.push_back(P);
-                    show_grid.at<cv::Vec3b>(P.y,P.x) = {0,0,255};
-                }
-                for (int i=100; i >= 0; i--) {
-                    P.x = 0; P.y = i;
-                    pts.push_back(P);
-                    show_grid.at<cv::Vec3b>(P.y,P.x) = {0,255,0};
-                }
-                for (int i=0; i < 101; i++) {
-                    P.x = i; P.y = 0;
-                    pts.push_back(P);
-                    show_grid.at<cv::Vec3b>(P.y,P.x) = {255,128,0};
-                }
-                for (int i=0; i < 101; i++) {
-                    P.x = 100; P.y = i;
-                    pts.push_back(P);
-                    show_grid.at<cv::Vec3b>(P.y,P.x) = {0,255,255};
-                }
-                for (int i=100; i >= 51; i--) {
-                    P.x = i; P.y = 100;
-                    pts.push_back(P);
-                    show_grid.at<cv::Vec3b>(P.y,P.x) = {0,128,255};
-                }
-                ranges.clear();
-                for (int i=0; i< pts.size(); i++) {
-                    R = 0.0;
-                    X = round(pts[i].x); Y = GridCells-1-round(pts[i].y);
-                    if (locmap::BresenhamLimObstacle(GridCenter,GridCenter,X,Y,0,GridCells-1,P)) {
-                        X = round(P.x); Y = GridCells-1-round(P.y);
-                        R = Distance2D(GridCenter,GridCenter,X,Y);
+// VFH
+//#if 0
+                locmap::CalcVFH();
+                int D=0;
+                dispVFH.setTo(cv::Scalar(255,255,255));
+#if 1
+                for (int i=0; i<Sectors; i++) {
+//                     R = locmap::VFHisto[i];
+//                     R = R * ScaleVFH;
+//                     H = 0;
+                    R = locmap::RawHisto[i];
+                    //R = Hmax - locmap::VFHisto[i];
+                    if (R > 0.0) {
+                        H = (VFHheight-1) - round(R * ScaleVFH);
+                        //H = (VFHheight-1) - round(R);
+                        //H = round(R * ScaleVFH);
                     }
-                    ranges.push_back(R);
+                    else {
+                        H = VFHheight-1;
+                        //H = 0;
+                    }
+                    //H = (VFHheight-1) - round(R * ScaleVFH);
+                    cv::line(dispVFH,cv::Point(VFHline*i,VFHheight-1),cv::Point(VFHline*i,H),{0,0,0},VFHline);
+
+                    //cv::line(showDist,cv::Point(i,ScanHt-1),cv::Point(i,DistY),{0,0,0});
+                    //cv::line(dispVFH,cv::Point(VFHline*i,VFHheight-1),cv::Point(VFHline*i,H),{0,0,0},VFHline);
+                    //cv::line(dispVFH,cv::Point(VFHline*i,0),cv::Point(VFHline*i,D),{0,0,0},VFHline);
+
+
+//                     cv::line(dispVFH,cv::Point(VFHline*i,VFHheight-1),cv::Point(VFHline*i,VFHheight-1-D),{0,0,0},VFHline);
+//                     D++;
+//                     if (D > VFHheight-1) D = 0; //VFHheight-1;
                 }
+#endif
+                D = Sectors / 2;
+                cv::line(dispVFH,cv::Point(VFHline*D,VFHheight-1),cv::Point(VFHline*D,0),{0,255,0},VFHline);
+                D = Sectors / 4;
+                cv::line(dispVFH,cv::Point(VFHline*D,VFHheight-1),cv::Point(VFHline*D,0),{255,255,0},VFHline);
+                D = 3* (Sectors / 4);
+                cv::line(dispVFH,cv::Point(VFHline*D,VFHheight-1),cv::Point(VFHline*D,0),{0,128,255},VFHline);
+                cv::imshow("VFH",dispVFH);
 
                 locmap::lmap_depth_image = vision::depth_image16.clone();
                 locmap::UpdateGridMap = true;
@@ -279,8 +275,9 @@ int main(int argc, char **argv) {
         usleep(10000);
     }
 
-    for (int i=0; i < ranges.size(); i++) {
-        std::cout << ranges[i] << std::endl;
+    for (int i=0; i < Sectors; i++) {
+        std::cout << locmap::RawHisto[i] << std::endl;
+        //std::cout << locmap::VFHisto[i] << std::endl;
     }
 
     std::cout << "down T265" << std::endl;
