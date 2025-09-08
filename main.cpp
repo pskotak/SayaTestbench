@@ -6,7 +6,7 @@
 #include "LocalMap/locmap.h"
 #include "t265.h"
 
-//#define DispVision
+#define DispVision
 #define PlanIt
 
 #define maxdist 4.0f
@@ -48,9 +48,10 @@ int main(int argc, char **argv) {
     //cv::Mat dispVFH(Sectors,VFHheight,CV_8UC3,cv::Scalar(127,127,127));
     cv::Mat dispVFH(VFHheight,3*Sectors,CV_8UC3,cv::Scalar(127,127,127));
     //float ScaleVFH = ((float) VFHheight) / std::exp(GridSizeM / 2.0);
-    float Hmax = (GridSizeM / 2.0);
+    //float Hmax = (GridSizeM / 2.0);
     //float ScaleVFH = ((float) VFHheight) / (Hmax * Hmax * Hmax);
-    float ScaleVFH = ((float) VFHheight) / (Hmax);
+    //float ScaleVFH = ((float) VFHheight) / (Hmax);
+    float ScaleVFH = ((float) VFHheight) / Dmax;
     int H;
 
 // ----------------------------------------------------------------------------
@@ -160,6 +161,12 @@ int main(int argc, char **argv) {
                 dispVFH.setTo(cv::Scalar(255,255,255));
 #if 1
                 for (int i=0; i<Sectors; i++) {
+                    R = locmap::VFHisto[i]; // Rozsah <0,1>, kde 1 = nejblize
+                    H = (VFHheight-1) - round(R * ScaleVFH);
+                    cv::line(dispVFH,cv::Point(VFHline*i,VFHheight-1),cv::Point(VFHline*i,H),{0,0,0},VFHline);
+
+
+#if 0
 //                     R = locmap::VFHisto[i];
 //                     R = R * ScaleVFH;
 //                     H = 0;
@@ -185,6 +192,7 @@ int main(int argc, char **argv) {
 //                     cv::line(dispVFH,cv::Point(VFHline*i,VFHheight-1),cv::Point(VFHline*i,VFHheight-1-D),{0,0,0},VFHline);
 //                     D++;
 //                     if (D > VFHheight-1) D = 0; //VFHheight-1;
+#endif
                 }
 #endif
                 D = Sectors / 2;
@@ -255,6 +263,9 @@ int main(int argc, char **argv) {
         if (key == 27) { // ESC key
             QuitProgram = true;
         }
+        else if (key == 'c') {
+            locmap::ClearLocMap();
+        }
         else if (key == 'p') {
             ShowPoints = !ShowPoints;
         }
@@ -275,10 +286,10 @@ int main(int argc, char **argv) {
         usleep(10000);
     }
 
-    for (int i=0; i < Sectors; i++) {
-        std::cout << locmap::RawHisto[i] << std::endl;
-        //std::cout << locmap::VFHisto[i] << std::endl;
-    }
+//     for (int i=0; i < Sectors; i++) {
+//         std::cout << locmap::RawHisto[i] << std::endl;
+//         //std::cout << locmap::VFHisto[i] << std::endl;
+//     }
 
     std::cout << "down T265" << std::endl;
     t265::ShutdownT265 = true;
