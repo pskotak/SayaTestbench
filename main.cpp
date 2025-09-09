@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
     //float Hmax = (GridSizeM / 2.0);
     //float ScaleVFH = ((float) VFHheight) / (Hmax * Hmax * Hmax);
     //float ScaleVFH = ((float) VFHheight) / (Hmax);
-    float ScaleVFH = ((float) VFHheight) / Dmax;
+    float ScaleVFH = (float) VFHheight; // = ((float) VFHheight) / Dmax;
     int H;
 
 // ----------------------------------------------------------------------------
@@ -65,8 +65,11 @@ int main(int argc, char **argv) {
     vision::Init();
     std::cout << "Vision running." << std::endl;
 
-    locmap::ObstacleDelta = 0.15;
-    locmap::InflateRadius = 3;
+    locmap::LocmapPC_start = vision::StartPcRow;
+    locmap::LocmapPC_end = vision::EndPcRow;
+    locmap::LocmapPC_IgnoreFromLeft = vision::IgnoreFromLeft;
+    locmap::ObstacleDelta = 0.01; // 0.15; // 0.09; //
+    locmap::InflateRadius = 3; //5; //3;
     LocMapThread = std::thread(&locmap::RunLocMap);
 
     t265::t265_serial_number = vision::t265_serial_number; // vision::GetSerNo(); aktualizuje i T265 serial number
@@ -108,9 +111,10 @@ int main(int argc, char **argv) {
             }
 
             if (!locmap::UpdateGridMap) {
+
 #ifdef PlanIt
-                //locmap::SetGoal(0,GridCenter);
-                locmap::SetGoal(0,GridCells-1);
+                locmap::SetGoal(0,GridCenter);
+                //locmap::SetGoal(0,GridCells-1);
                 locmap::Plan(); // TODO Force A* planner to plan to the nearest wall even if goal is unreachable
 #endif
                 show_grid.setTo(cv::Scalar(127,127,127));
@@ -131,13 +135,12 @@ int main(int argc, char **argv) {
                     }
                 }
 
-                //int startX,startY,endX,endY;
+// Robot vector
                 int X,Y;
                 TPolarVector pV;
                 TPoint2D P;
                 std::vector<TPoint2D> pts;
 
-                //cv::putText(show_grid,"Hello, OpenCV!",cv::Point(10, show_grid.rows / 2),cv::FONT_HERSHEY_DUPLEX,0.3,CV_RGB(118, 185, 0),1);
                 pV.X = GridCenter;
                 pV.Y = GridCenter;
                 pV.Mag = GridCells/4.0;
@@ -145,14 +148,20 @@ int main(int argc, char **argv) {
                 PolarToCart(&pV);
                 X = round(pV.X); Y = round(pV.Y);
                 X += GridCenter; Y += GridCenter;
-                //Bresenham(GridCenter,GridCenter,X,Y,pts);
-                //BresenhamLim(GridCenter,GridCenter,X,Y,0,GridCells-1,pts);
                 BresenhamLim2(GridCenter,GridCenter,X,Y,0,GridCells-1,pts);
-
                 for (int i=0; i< pts.size(); i++) {
                     show_grid.at<cv::Vec3b>(pts[i].y,pts[i].x) = {0,255,255};
                 }
                 show_grid.at<cv::Vec3b>(GridCenter,GridCenter) = {255,0,0};
+
+// path (over vector)
+                for (int y = 0; y < GridCells; ++y) {
+                    for (int x = 0; x < GridCells; ++x) {
+                        if (locmap::ObstacleGrid[x][y].path) {
+                            show_grid.at<cv::Vec3b>(x,y) = {180,0,255};
+                        }
+                    }
+                }
 
 // VFH
 //#if 0
@@ -196,11 +205,14 @@ int main(int argc, char **argv) {
                 }
 #endif
                 D = Sectors / 2;
-                cv::line(dispVFH,cv::Point(VFHline*D,VFHheight-1),cv::Point(VFHline*D,0),{0,255,0},VFHline);
+                //cv::line(dispVFH,cv::Point(VFHline*D,VFHheight-1),cv::Point(VFHline*D,0),{0,255,0},VFHline);
+                cv::line(dispVFH,cv::Point(VFHline*D,VFHheight-1),cv::Point(VFHline*D,0),{0,255,0},1);
                 D = Sectors / 4;
-                cv::line(dispVFH,cv::Point(VFHline*D,VFHheight-1),cv::Point(VFHline*D,0),{255,255,0},VFHline);
+                //cv::line(dispVFH,cv::Point(VFHline*D,VFHheight-1),cv::Point(VFHline*D,0),{255,255,0},VFHline);
+                cv::line(dispVFH,cv::Point(VFHline*D,VFHheight-1),cv::Point(VFHline*D,0),{255,255,0},1);
                 D = 3* (Sectors / 4);
-                cv::line(dispVFH,cv::Point(VFHline*D,VFHheight-1),cv::Point(VFHline*D,0),{0,128,255},VFHline);
+                //cv::line(dispVFH,cv::Point(VFHline*D,VFHheight-1),cv::Point(VFHline*D,0),{0,128,255},VFHline);
+                cv::line(dispVFH,cv::Point(VFHline*D,VFHheight-1),cv::Point(VFHline*D,0),{0,128,255},1);
                 cv::imshow("VFH",dispVFH);
 
                 locmap::lmap_depth_image = vision::depth_image16.clone();
@@ -271,26 +283,35 @@ int main(int argc, char **argv) {
         }
         else if (key == 's') {
             vision::StartPcRow--;
+            locmap::LocmapPC_start--;
         }
         else if (key == 'S') {
             vision::StartPcRow++;
+            locmap::LocmapPC_start++;
         }
         else if (key == 'e') {
             vision::EndPcRow--;
+            locmap::LocmapPC_end--;
         }
         else if (key == 'E') {
             vision::EndPcRow++;
+            locmap::LocmapPC_end++;
         }
 
         //usleep(100000);
         usleep(10000);
     }
+/*
+    for (int i=0; i < Sectors; i++) {
+        std::cout << locmap::RawHisto[i] << std::endl;
+    }
 
-//     for (int i=0; i < Sectors; i++) {
-//         std::cout << locmap::RawHisto[i] << std::endl;
-//         //std::cout << locmap::VFHisto[i] << std::endl;
-//     }
+    std::cout << "=====================" << std::endl;
 
+    for (int i=0; i < Sectors; i++) {
+        std::cout << locmap::VFHisto[i] << std::endl;
+    }
+*/
     std::cout << "down T265" << std::endl;
     t265::ShutdownT265 = true;
     T265Thread.join();
