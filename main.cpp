@@ -21,8 +21,8 @@
 int main(int argc, char **argv) {
     bool QuitProgram = false;
     cv::Mat processed_frame;
-    std::vector<T3Dpoint> pc;
-    T3Dpoint pt;
+    std::vector<TPoint3D> pc;
+    TPoint3D pt;
     cv::Mat ptshow(matlenpx,matlenpx,CV_8UC3,cv::Scalar(0,127,127));
     int u,v;
     cv::Vec3b px;
