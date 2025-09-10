@@ -301,7 +301,7 @@ int main(int argc, char **argv) {
         //usleep(100000);
         usleep(10000);
     }
-
+/*
     for (int i=0; i < Sectors; i++) {
         std::cout << locmap::RawHisto[i] << std::endl;
     }
@@ -311,7 +311,7 @@ int main(int argc, char **argv) {
     for (int i=0; i < Sectors; i++) {
         std::cout << locmap::VFHisto[i] << std::endl;
     }
-
+*/
     std::cout << "down T265" << std::endl;
     t265::ShutdownT265 = true;
     T265Thread.join();
