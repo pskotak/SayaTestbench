@@ -61,15 +61,15 @@ int main(int argc, char **argv) {
 
 // ----------------------------------------------------------------------------
     vision::StartPcRow = 160;
-    vision::EndPcRow = D455H-60; //vision::EndPcRow = D455H-160;
+    vision::EndPcRow = D455H-110; //vision::EndPcRow = D455H-160;
     vision::Init();
     std::cout << "Vision running." << std::endl;
 
     locmap::LocmapPC_start = vision::StartPcRow;
     locmap::LocmapPC_end = vision::EndPcRow;
     locmap::LocmapPC_IgnoreFromLeft = vision::IgnoreFromLeft;
-    locmap::ObstacleDelta = 0.01; // 0.15; // 0.09; //
-    locmap::InflateRadius = 3; //5; //3;
+    locmap::ObstacleDelta = 0.27; // 0.15; // 0.09; //
+    locmap::InflateRadius = 2; //5; //3;
     LocMapThread = std::thread(&locmap::RunLocMap);
 
     t265::t265_serial_number = vision::t265_serial_number; // vision::GetSerNo(); aktualizuje i T265 serial number
@@ -301,7 +301,7 @@ int main(int argc, char **argv) {
         //usleep(100000);
         usleep(10000);
     }
-/*
+
     for (int i=0; i < Sectors; i++) {
         std::cout << locmap::RawHisto[i] << std::endl;
     }
@@ -311,7 +311,7 @@ int main(int argc, char **argv) {
     for (int i=0; i < Sectors; i++) {
         std::cout << locmap::VFHisto[i] << std::endl;
     }
-*/
+
     std::cout << "down T265" << std::endl;
     t265::ShutdownT265 = true;
     T265Thread.join();
