@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
     std::vector<float> ranges;
 
 #define VFHheight 150
-    #define VFHline 3
+#define VFHline 3
     //cv::Mat dispVFH(Sectors,VFHheight,CV_8UC3,cv::Scalar(127,127,127));
     cv::Mat dispVFH(VFHheight,3*Sectors,CV_8UC3,cv::Scalar(127,127,127));
     //float ScaleVFH = ((float) VFHheight) / std::exp(GridSizeM / 2.0);
@@ -52,6 +52,7 @@ int main(int argc, char **argv) {
     //float ScaleVFH = ((float) VFHheight) / (Hmax * Hmax * Hmax);
     //float ScaleVFH = ((float) VFHheight) / (Hmax);
     float ScaleVFH = (float) VFHheight; // = ((float) VFHheight) / Dmax;
+    locmap::ValleyThreshold = 0.4;
     int H;
 
 // ----------------------------------------------------------------------------
@@ -70,6 +71,7 @@ int main(int argc, char **argv) {
     locmap::LocmapPC_IgnoreFromLeft = vision::IgnoreFromLeft;
     locmap::ObstacleDelta = 0.27; // 0.15; // 0.09; //
     locmap::InflateRadius = 2; //5; //3;
+    locmap::TValleyVFH V;
     LocMapThread = std::thread(&locmap::RunLocMap);
 
     t265::t265_serial_number = vision::t265_serial_number; // vision::GetSerNo(); aktualizuje i T265 serial number
@@ -213,6 +215,26 @@ int main(int argc, char **argv) {
                 D = 3* (Sectors / 4);
                 //cv::line(dispVFH,cv::Point(VFHline*D,VFHheight-1),cv::Point(VFHline*D,0),{0,128,255},VFHline);
                 cv::line(dispVFH,cv::Point(VFHline*D,VFHheight-1),cv::Point(VFHline*D,0),{0,128,255},1);
+
+                H = (VFHheight-1) - round(locmap::ValleyThreshold * ScaleVFH);
+                cv::line(dispVFH,cv::Point(1,H),cv::Point(VFHline*(Sectors-1),H),{255,128,0},1);
+
+                for (int i=0; i < locmap::Valleys.size(); i++) {
+                    V = locmap::Valleys[i];
+                    if (V.W >= 0) {
+                        if (V.LSector <= V.RSector) {
+                            cv::line(dispVFH,cv::Point(VFHline*V.LSector,VFHheight-3),cv::Point(VFHline*V.RSector,VFHheight-3),{255,128,0},5);
+                        }
+                        else {
+                            cv::line(dispVFH,cv::Point(VFHline*V.LSector,VFHheight-3),cv::Point(VFHline*(Sectors-1),VFHheight-3),{255,128,0},5);
+                            cv::line(dispVFH,cv::Point(VFHline*1,VFHheight-3),cv::Point(VFHline*V.RSector,VFHheight-3),{255,128,0},5);
+                        }
+                    }
+
+
+
+                }
+
                 cv::imshow("VFH",dispVFH);
 
                 locmap::lmap_depth_image = vision::depth_image16.clone();
@@ -312,6 +334,13 @@ int main(int argc, char **argv) {
         std::cout << locmap::VFHisto[i] << std::endl;
     }
 */
+    for (int i=0; i < locmap::Valleys.size(); i++) {
+        V = locmap::Valleys[i];
+        std::cout << "L: " << V.LSector << " R: " << V.RSector << " W: " << V.W << std::endl;
+        std::cout << "La: " << locmap::SectorToAgle(V.LSector) << " Ra: " << locmap::SectorToAgle(V.RSector) << std::endl;
+        std::cout << std::endl;
+    }
+
     std::cout << "down T265" << std::endl;
     t265::ShutdownT265 = true;
     T265Thread.join();
