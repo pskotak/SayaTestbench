@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
 
 // ----------------------------------------------------------------------------
     vision::StartPcRow = 160;
-    vision::EndPcRow = D455H-110; //vision::EndPcRow = D455H-160;
+    vision::EndPcRow = D455H-120; //vision::EndPcRow = D455H-160;
     vision::Init();
     std::cout << "Vision running." << std::endl;
 
@@ -72,6 +72,16 @@ int main(int argc, char **argv) {
     locmap::ObstacleDelta = 0.27; // 0.15; // 0.09; //
     locmap::InflateRadius = 2; //5; //3;
     locmap::TValleyVFH V;
+
+    locmap::VFH_GoalAngle = 0.0 * DegRad;
+    //locmap::VFH_GoalAngle = 12.0 * DegRad;
+    //locmap::VFH_GoalAngle = -80.0 * DegRad;
+    //locmap::VFH_GoalAngle = 80.0 * DegRad;
+    //locmap::VFH_GoalAngle = 45.0 * DegRad;
+    //locmap::VFH_GoalAngle = -45.0 * DegRad;
+
+    locmap::VFH_GoalSector = locmap::AngleToSector(locmap::VFH_GoalAngle);
+
     LocMapThread = std::thread(&locmap::RunLocMap);
 
     t265::t265_serial_number = vision::t265_serial_number; // vision::GetSerNo(); aktualizuje i T265 serial number
@@ -175,35 +185,6 @@ int main(int argc, char **argv) {
                     R = locmap::VFHisto[i]; // Rozsah <0,1>, kde 1 = nejblize
                     H = (VFHheight-1) - round(R * ScaleVFH);
                     cv::line(dispVFH,cv::Point(VFHline*i,VFHheight-1),cv::Point(VFHline*i,H),{0,0,0},VFHline);
-
-
-#if 0
-//                     R = locmap::VFHisto[i];
-//                     R = R * ScaleVFH;
-//                     H = 0;
-                    R = locmap::RawHisto[i];
-                    //R = Hmax - locmap::VFHisto[i];
-                    if (R > 0.0) {
-                        H = (VFHheight-1) - round(R * ScaleVFH);
-                        //H = (VFHheight-1) - round(R);
-                        //H = round(R * ScaleVFH);
-                    }
-                    else {
-                        H = VFHheight-1;
-                        //H = 0;
-                    }
-                    //H = (VFHheight-1) - round(R * ScaleVFH);
-                    cv::line(dispVFH,cv::Point(VFHline*i,VFHheight-1),cv::Point(VFHline*i,H),{0,0,0},VFHline);
-
-                    //cv::line(showDist,cv::Point(i,ScanHt-1),cv::Point(i,DistY),{0,0,0});
-                    //cv::line(dispVFH,cv::Point(VFHline*i,VFHheight-1),cv::Point(VFHline*i,H),{0,0,0},VFHline);
-                    //cv::line(dispVFH,cv::Point(VFHline*i,0),cv::Point(VFHline*i,D),{0,0,0},VFHline);
-
-
-//                     cv::line(dispVFH,cv::Point(VFHline*i,VFHheight-1),cv::Point(VFHline*i,VFHheight-1-D),{0,0,0},VFHline);
-//                     D++;
-//                     if (D > VFHheight-1) D = 0; //VFHheight-1;
-#endif
                 }
 #endif
                 D = Sectors / 2;
@@ -218,6 +199,13 @@ int main(int argc, char **argv) {
 
                 H = (VFHheight-1) - round(locmap::ValleyThreshold * ScaleVFH);
                 cv::line(dispVFH,cv::Point(1,H),cv::Point(VFHline*(Sectors-1),H),{255,128,0},1);
+
+                if (locmap::VFH_SteeringSector >= 0) {
+                    cv::line(dispVFH,cv::Point(VFHline*locmap::VFH_SteeringSector,VFHheight-1),cv::Point(VFHline*locmap::VFH_SteeringSector,10),{0,0,255},2);
+                }
+                if (locmap::VFH_GoalSector >= 0) {
+                    cv::line(dispVFH,cv::Point(VFHline*locmap::VFH_GoalSector,VFHheight-1),cv::Point(VFHline*locmap::VFH_GoalSector,30),{100,255,0},2);
+                }
 
                 for (int i=0; i < locmap::Valleys.size(); i++) {
                     V = locmap::Valleys[i];
@@ -340,6 +328,10 @@ int main(int argc, char **argv) {
         std::cout << "La: " << locmap::SectorToAgle(V.LSector) << " Ra: " << locmap::SectorToAgle(V.RSector) << std::endl;
         std::cout << std::endl;
     }
+    std::cout << "Goal Sector: " << locmap::VFH_GoalSector << " Angle: " << locmap::VFH_GoalAngle << std::endl;
+    std::cout << "Inside: " << locmap::Inside << std::endl;
+    std::cout << "Steering Sector: " << locmap::VFH_SteeringSector << " Angle: " << locmap::VFH_SteeringAngle << std::endl;
+    std::cout << std::endl;
 
     std::cout << "down T265" << std::endl;
     t265::ShutdownT265 = true;
